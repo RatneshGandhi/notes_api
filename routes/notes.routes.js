@@ -1,8 +1,8 @@
 import express from 'express'
 import { ensureAuthenticated } from '../middleware/auth.middleware.js'
 import { createNoteschema } from '../validation/note.validation.js'
-import { createNote,getNoteById,getNotesByUserId } from '../services/note.sevices.js'
-import { en } from 'zod/locales'
+import { createNote,getNoteById,getNotesByUserId, updateNote,deleteNote } from '../services/note.sevices.js'
+import { updateNoteSchema } from '../validation/note.validation.js'
 
 const router = express.Router()
 
@@ -40,6 +40,34 @@ router.get('/:id',ensureAuthenticated,async (req,res)=>{
     } catch (error) {
         return res.status(400).json({error:'Note not foumd'})
     }
+})
+
+router.patch('/:id',ensureAuthenticated,async (req,res)=>{
+    try {
+        const validateData=await updateNoteSchema.safeParseAsync(req.body)
+        if(validateData.error){
+            return res.status(400).json({error:validateData.error.format()})
+        }
+
+        const data=validateData.data
+
+        const updatedNote=await updateNote(req.params.id,req.user.id,data)
+        return res.status(200).json({updatedNote});
+    } catch (error) {
+        return res.status(404).json({error:'Not able to update'})
+    }
+})
+
+router.delete('/:id',ensureAuthenticated,async (req,res)=>{
+        try {
+            const deletedNote=await deleteNote(req.params.id,req.user.id)
+              if (!deletedNote) {
+            return res.status(404).json({ error: "Note not found" })
+        }
+            return res.status(200).json({message:'Note deleted'})
+        } catch (error) {
+            return res.status(401).json({error:'Something is wrong'})
+        }
 })
 
 export default router

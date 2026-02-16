@@ -41,3 +41,28 @@ export async function getNoteById(noteId,userId){
     )
     return noteById
 }
+
+export async function updateNote(noteId,userId,data){
+    
+         const [updatedNote]=await db.update(notesTable)
+    .set(data)
+    .where(and(eq(notesTable.userId,userId),eq(notesTable.id,noteId)))
+    .returning({
+        id:notesTable.id,
+        title:notesTable.title,
+        content:notesTable.content,
+        updatedAt:notesTable.updatedAt
+    })
+    return updatedNote
+}
+
+export async function deleteNote(noteId,userId){
+    const [deleteNote]=await db
+    .delete(notesTable)
+    .where(and(eq(notesTable.userId,userId),eq(notesTable.id,noteId)))
+    .returning({id:notesTable.id})
+
+    return deleteNote
+}
+
+
