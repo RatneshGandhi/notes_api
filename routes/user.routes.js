@@ -7,22 +7,26 @@ import { createToken } from '../utils/token.js'
 const router = express.Router()
 
 router.post('/signup', async function (req, res) {
-    const validatedata = await signUpSchema.safeParseAsync(req.body)
-    if (validatedata.error) {
-        return res.status(400).json({ error: validatedata.error.format() })
+    try {
+        const validatedata = await signUpSchema.safeParseAsync(req.body)
+        if (validatedata.error) {
+            return res.status(400).json({ error: validatedata.error.format() })
+        }
+
+        const { firstname, lastname, email, password } = validatedata.data
+
+        const existingUser = await getUserByEmail(email)
+        if (existingUser) {
+            return res.status(409).json({ message: 'User already exists' })
+        }
+
+        const { salt, password: hashedPassword } = hashedPasswordWithSalt(password)
+        const newUser = await createUser(firstname, lastname, email, hashedPassword, salt)
+
+        return res.status(201).json({ message: 'User created', userId: newUser.id })
+    } catch (error) {
+        return res.status(500).json({ error: 'Something went wrong' })
     }
-
-    const { firstname, lastname, email, password } = validatedata.data
-
-    const existingUser = await getUserByEmail(email)
-    if (existingUser) {
-        return res.status(409).json({ message: 'User already exists' })
-    }
-
-    const { salt, password: hashedPassword } = hashedPasswordWithSalt(password)
-    const newUser = await createUser(firstname, lastname, email, hashedPassword, salt)
-
-    return res.status(201).json({ message: 'User created', userId: newUser.id })
 })
 
 router.post('/login', async function (req, res) {

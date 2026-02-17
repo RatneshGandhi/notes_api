@@ -1,25 +1,25 @@
 import { verifyToken } from '../utils/token.js'
 
-export function authentication(req,res,next){
-    const authHeader=req.header('authorization')
+export function authentication(req, res, next) {
+    const authHeader = req.header('authorization')
 
-    if(!authHeader) return next();
+    if (!authHeader) return next();
 
-    if(!authHeader.startsWith('Bearer')){
-        return null;
+    if (!authHeader.startsWith('Bearer')) {
+        return next();
     }
 
-    const [_,token]=authHeader.split(" ")
+    const [_, token] = authHeader.split(" ")
 
-    const payload=verifyToken(token)
+    const payload = verifyToken(token)
 
-    req.user=payload
+    req.user = payload
     next();
 }
 
-export function ensureAuthenticated(req,res,next){
-    if(!req.user || !req.user.id){
-        return res.status(401).json({message:'Not authenticated'})
+export function ensureAuthenticated(req, res, next) {
+    if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: 'Not authenticated' })
     }
     next();
 }
